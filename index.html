@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2WSP08B7PH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2WSP08B7PH');
+</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VSEPR 3D Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            margin: 0; 
+            display: flex; 
+            font-family: 'Inter', sans-serif; 
+            background: #0f172a; 
+            color: white; 
+            overflow: hidden; 
+        }
+        
+        /* ═══════ SIDEBAR ═══════ */
+        #sidebar { 
+            width: 340px; 
+            background: rgba(30, 41, 59, 0.95); 
+            backdrop-filter: blur(20px);
+            height: 100vh; 
+            overflow-y: auto; 
+            padding: 32px 24px; 
+            box-sizing: border-box; 
+            border-right: 1px solid rgba(255,255,255,0.1); 
+            z-index: 10; 
+            box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+        }
+        #sidebar::-webkit-scrollbar { width: 6px; }
+        #sidebar::-webkit-scrollbar-track { background: transparent; }
+        #sidebar::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
+        h1 { 
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px; 
+            margin-top: 0; 
+            color: #38bdf8; 
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 13px; 
+            color: #94a3b8; 
+            line-height: 1.6; 
+            margin-bottom: 32px;
+        }
+        
+        .group-title { 
+            margin-top: 24px; 
+            font-size: 12px; 
+            text-transform: uppercase; 
+            color: #64748b; 
+            letter-spacing: 1.5px; 
+            font-weight: 700; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            padding-bottom: 8px; 
+            margin-bottom: 12px; 
+        }
+        
+        .model-btn { 
+            display: block; 
+            width: 100%; 
+            text-align: left; 
+            background: transparent; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            color: #e2e8f0; 
+            padding: 12px 16px; 
+            border-radius: 12px; 
+            margin-bottom: 8px; 
+            cursor: pointer; 
+            transition: all 0.2s cubic-bezier(.4,0,.2,1); 
+            font-size: 14px; 
+            font-family: inherit;
+        }
+        .model-btn:hover { 
+            background: rgba(255,255,255,0.05); 
+            transform: translateX(4px);
+        }
+        .model-btn.active { 
+            background: linear-gradient(135deg, #0ea5e9, #3b82f6); 
+            border-color: transparent; 
+            color: white; 
+            font-weight: 600; 
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+            transform: translateX(4px);
+        }
+        
+        /* ═══════ MAIN AREA ═══════ */
+        #main { 
+            flex: 1; 
+            position: relative; 
+        }
+        #canvas-container { 
+            width: 100%; 
+            height: 100%; 
+        }
+        
+        /* ═══════ INFO CARD ═══════ */
+        #info-card { 
+            position: absolute; 
+            top: 32px; 
+            right: 32px; 
+            width: 300px; 
+            background: rgba(30, 41, 59, 0.85); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 16px; 
+            padding: 24px; 
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5); 
+            z-index: 10; 
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+        #info-card h2 { 
+            font-family: 'Outfit', sans-serif;
+            margin: 0 0 20px 0; 
+            font-size: 24px; 
+            color: #f8fafc; 
+        }
+        .info-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 12px; 
+            font-size: 13px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            padding-bottom: 8px;
+        }
+        .info-label { color: #94a3b8; }
+        .info-value { color: #f1f5f9; font-weight: 600; text-align: right; }
+        
+        /* ═══════ LEGEND & TIPS ═══════ */
+        #legend { 
+            position: absolute; 
+            bottom: 32px; 
+            right: 32px; 
+            background: rgba(30, 41, 59, 0.85); 
+            backdrop-filter: blur(12px); 
+            padding: 16px 20px; 
+            border-radius: 16px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            font-size: 13px; 
+        }
+        .legend-item { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 10px; 
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+        .legend-item:last-child { margin-bottom: 0; }
+        .legend-color { 
+            width: 14px; 
+            height: 14px; 
+            border-radius: 50%; 
+            margin-right: 12px; 
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
+        }
+
+        .controls-tip {
+            position: absolute; 
+            bottom: 32px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            font-size: 13px; 
+            font-weight: 500;
+            color: #94a3b8; 
+            background: rgba(15, 23, 42, 0.8); 
+            backdrop-filter: blur(8px);
+            padding: 10px 20px; 
+            border-radius: 20px; 
+            border: 1px solid rgba(255,255,255,0.05);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ═══════ MOBILE RESPONSIVE ═══════ */
+        #mobile-header {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: rgba(30, 41, 59, 0.95);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            z-index: 80;
+        }
+        #mobile-header h1 { margin: 0; font-size: 20px; color: #38bdf8; font-family: 'Outfit', sans-serif; }
+        #menu-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 90;
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #sidebar {
+                position: fixed;
+                left: -340px;
+                top: 0;
+                transition: left 0.3s ease;
+                z-index: 100;
+                padding-bottom: 80px;
+            }
+            #sidebar.open { left: 0; }
+            #mobile-header { display: flex; }
+            #info-card {
+                top: 16px;
+                right: 16px;
+                left: 16px;
+                width: auto;
+                padding: 16px;
+                pointer-events: none;
+                background: rgba(30, 41, 59, 0.7);
+            }
+            #info-card h2 { font-size: 18px; margin-bottom: 12px; }
+            .info-row { font-size: 12px; margin-bottom: 6px; padding-bottom: 4px; }
+            #legend {
+                bottom: 16px;
+                right: 16px;
+                left: 16px;
+                padding: 10px;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+                pointer-events: none;
+                background: rgba(30, 41, 59, 0.7);
+            }
+            .legend-item { margin-bottom: 0; font-size: 11px; }
+            .controls-tip {
+                display: none;
+            }
+        }
+
+        /* ═══════ MODAL ═══════ */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal.active { display: flex; opacity: 1; }
+        .modal-content {
+            background: #1e293b;
+            padding: 32px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        .modal.active .modal-content { transform: translateY(0); }
+        .close-btn {
+            position: absolute;
+            top: 16px; right: 16px;
+            font-size: 24px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close-btn:hover { color: white; }
+        .modal h2 { margin-top: 0; font-family: 'Outfit', sans-serif; color: #38bdf8; font-size: 24px; }
+        #feedback-form label {
+            display: block;
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            margin-top: 16px;
+        }
+        #feedback-form select, #feedback-form input, #feedback-form textarea {
+            width: 100%;
+            box-sizing: border-box;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+        #feedback-form select:focus, #feedback-form input:focus, #feedback-form textarea:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 24px;
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover { background: #0284c7; }
+    </style>
+</head>
+<body>
+
+    <div id="mobile-header">
+        <h1>VSEPR 3D</h1>
+        <button id="menu-toggle">☰</button>
+    </div>
+    <div id="overlay"></div>
+
+    <div id="sidebar">
+        <h1>VSEPR 3D Simulator</h1>
+        <p class="subtitle">
+            Interactive simulation for learning molecular geometries, shapes, and the Valence Shell Electron Pair Repulsion (VSEPR) theory.
+        </p>
+        <div id="buttons-container"></div>
+        <button id="feedback-btn" class="model-btn" style="margin-top: 24px; text-align: center; background: rgba(255,255,255,0.05); color: #38bdf8; font-weight: 600;">💬 Give Feedback</button>
+    </div>
+    
+    <div id="main">
+        <div id="canvas-container"></div>
+        
+        <div id="info-card">
+            <h2 id="info-name">Select a Model</h2>
+            <div class="info-row">
+                <span class="info-label">VSEPR Class</span>
+                <span class="info-value" id="info-ax">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Electron Geometry</span>
+                <span class="info-value" id="info-eg">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Ideal Bond Angle</span>
+                <span class="info-value" id="info-angle">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Bonding Pairs</span>
+                <span class="info-value" id="info-bp">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Lone Pairs</span>
+                <span class="info-value" id="info-lp">—</span>
+            </div>
+            <div class="info-row" style="border:none; margin-bottom:0;">
+                <span class="info-label">Examples</span>
+                <span class="info-value" id="info-ex">—</span>
+            </div>
+        </div>
+        
+        <div id="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #8b5cf6;"></div> Central Atom
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #06b6d4;"></div> Attached Atom
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fde047; opacity: 0.8;"></div> Lone Pair
+            </div>
+        </div>
+
+        <div class="controls-tip">
+            <span>🖱️ Left Click to Rotate</span>
+            <span>·</span>
+            <span>📜 Scroll to Zoom</span>
+        </div>
+    </div>
+
+    <!-- Import Maps for Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        /* ═══════════════════════════════════════════
+           VSEPR DATA & MATHEMATICS
+           ═══════════════════════════════════════════ */
+        const sq3_2 = Math.sqrt(3)/2;
+        const y_base = -1/3;
+        const r_base = (2 * Math.sqrt(2)) / 3;
+
+        // Base coordinates for each Steric Number (normalized to length 1)
+        const positions = {
+            SN2: [ [1,0,0], [-1,0,0] ],
+            SN3: [ [0,1,0], [sq3_2,-0.5,0], [-sq3_2,-0.5,0] ],
+            SN4: [ [0,1,0], [r_base,y_base,0], [-r_base/2,y_base,r_base*sq3_2], [-r_base/2,y_base,-r_base*sq3_2] ],
+            SN5: [ [0,1,0], [0,-1,0], [1,0,0], [-0.5,0,sq3_2], [-0.5,0,-sq3_2] ], // 0,1 are axial; 2,3,4 are equatorial
+            SN6: [ [0,1,0], [0,-1,0], [1,0,0], [-1,0,0], [0,0,1], [0,0,-1] ]     // 0,1 are axial; others equatorial
+        };
+
+        const VSEPR_DATA = [
+            { id: 'AX2', sn: 2, e: 0, name: 'Linear', eg: 'Linear', angle: '180°', examples: 'CO₂, BeCl₂', positions: positions.SN2, lp: [] },
+            { id: 'AX3', sn: 3, e: 0, name: 'Trigonal Planar', eg: 'Trigonal Planar', angle: '120°', examples: 'BF₃, SO₃', positions: positions.SN3, lp: [] },
+            { id: 'AX2E1', sn: 3, e: 1, name: 'Bent / V-Shaped', eg: 'Trigonal Planar', angle: '< 120° (≈ 119°)', examples: 'SO₂, O₃', positions: positions.SN3, lp: [0] },
+            { id: 'AX4', sn: 4, e: 0, name: 'Tetrahedral', eg: 'Tetrahedral', angle: '109.5°', examples: 'CH₄, CCl₄', positions: positions.SN4, lp: [] },
+            { id: 'AX3E1', sn: 4, e: 1, name: 'Trigonal Pyramidal', eg: 'Tetrahedral', angle: '< 109.5° (≈ 107°)', examples: 'NH₃, PCl₃', positions: positions.SN4, lp: [0] },
+            { id: 'AX2E2', sn: 4, e: 2, name: 'Bent / V-Shaped', eg: 'Tetrahedral', angle: '< 109.5° (≈ 104.5°)', examples: 'H₂O, H₂S', positions: positions.SN4, lp: [0, 1] },
+            { id: 'AX5', sn: 5, e: 0, name: 'Trigonal Bipyramidal', eg: 'Trigonal Bipyramidal', angle: '90°, 120°', examples: 'PCl₅, PF₅', positions: positions.SN5, lp: [] },
+            { id: 'AX4E1', sn: 5, e: 1, name: 'Seesaw', eg: 'Trigonal Bipyramidal', angle: '< 90°, < 120°', examples: 'SF₄', positions: positions.SN5, lp: [2] },
+            { id: 'AX3E2', sn: 5, e: 2, name: 'T-Shaped', eg: 'Trigonal Bipyramidal', angle: '< 90°', examples: 'ClF₃, BrF₃', positions: positions.SN5, lp: [2, 3] },
+            { id: 'AX2E3', sn: 5, e: 3, name: 'Linear', eg: 'Trigonal Bipyramidal', angle: '180°', examples: 'XeF₂, I₃⁻', positions: positions.SN5, lp: [2, 3, 4] },
+            { id: 'AX6', sn: 6, e: 0, name: 'Octahedral', eg: 'Octahedral', angle: '90°', examples: 'SF₆', positions: positions.SN6, lp: [] },
+            { id: 'AX5E1', sn: 6, e: 1, name: 'Square Pyramidal', eg: 'Octahedral', angle: '< 90°', examples: 'BrF₅, IF₅', positions: positions.SN6, lp: [1] },
+            { id: 'AX4E2', sn: 6, e: 2, name: 'Square Planar', eg: 'Octahedral', angle: '90°', examples: 'XeF₄', positions: positions.SN6, lp: [0, 1] }
+        ];
+
+        function formatVSEPR(id) {
+            const subs = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆'};
+            return id.replace(/\d/g, d => subs[d]);
+        }
+
+        /* ═══════════════════════════════════════════
+           UI INITIALIZATION
+           ═══════════════════════════════════════════ */
+        const sidebarEl = document.getElementById('buttons-container');
+        const groups = {};
+        VSEPR_DATA.forEach(m => {
+            if(!groups[m.sn]) groups[m.sn] = [];
+            groups[m.sn].push(m);
+        });
+
+        Object.keys(groups).forEach(sn => {
+            const title = document.createElement('div');
+            title.className = 'group-title';
+            title.textContent = 'Steric Number ' + sn;
+            sidebarEl.appendChild(title);
+            
+            groups[sn].forEach(m => {
+                const btn = document.createElement('button');
+                btn.className = 'model-btn';
+                btn.innerHTML = `<span style="display:inline-block; width:45px;">${formatVSEPR(m.id)}</span> ${m.name}`;
+                btn.onclick = () => selectModel(m.id);
+                btn.id = 'btn-' + m.id;
+                sidebarEl.appendChild(btn);
+            });
+        });
+
+        let currentModelId = null;
+
+        window.selectModel = function(id) {
+            if(currentModelId) document.getElementById('btn-' + currentModelId).classList.remove('active');
+            currentModelId = id;
+            document.getElementById('btn-' + currentModelId).classList.add('active');
+            
+            const m = VSEPR_DATA.find(x => x.id === id);
+            
+            // Update Info Card
+            document.getElementById('info-name').textContent = m.name;
+            document.getElementById('info-ax').textContent = formatVSEPR(m.id);
+            document.getElementById('info-eg').textContent = m.eg;
+            document.getElementById('info-angle').textContent = m.angle;
+            document.getElementById('info-bp').textContent = m.sn - m.e;
+            document.getElementById('info-lp').textContent = m.e;
+            document.getElementById('info-ex').textContent = m.examples;
+            
+            // Pop-in animation reset
+            moleculeGroup.scale.set(0.01, 0.01, 0.01);
+            
+            drawMolecule(m);
+        };
+
+        /* ═══════════════════════════════════════════
+           THREE.JS SETUP
+           ═══════════════════════════════════════════ */
+        const container = document.getElementById('canvas-container');
+        
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0f172a);
+        
+        // Subtle grid
+        const grid = new THREE.GridHelper(15, 15, 0x334155, 0x1e293b);
+        grid.position.y = -4;
+        scene.add(grid);
+
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+        camera.position.set(5, 4, 8); // nice isometric angle
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.5; // slow rotation
+
+        // Lighting
+        const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambient);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(5, 10, 7);
+        scene.add(dirLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 0.4);
+        pointLight.position.set(-5, -5, -5);
+        scene.add(pointLight);
+
+        // Materials
+        const matCenter = new THREE.MeshStandardMaterial({ 
+            color: 0x8b5cf6, roughness: 0.2, metalness: 0.2 
+        });
+        const matAtom = new THREE.MeshStandardMaterial({ 
+            color: 0x06b6d4, roughness: 0.2, metalness: 0.2 
+        });
+        const matBond = new THREE.MeshStandardMaterial({ 
+            color: 0xe2e8f0, roughness: 0.4, metalness: 0.1 
+        });
+        const matLP = new THREE.MeshStandardMaterial({ 
+            color: 0xfde047, transparent: true, opacity: 0.5, roughness: 0.2 
+        });
+
+        const moleculeGroup = new THREE.Group();
+        scene.add(moleculeGroup);
+
+        function drawMolecule(model) {
+            // Clear previous
+            while(moleculeGroup.children.length > 0){ 
+                moleculeGroup.remove(moleculeGroup.children[0]); 
+            }
+            
+            // Central Atom
+            const centerGeo = new THREE.SphereGeometry(0.7, 32, 32);
+            const centerMesh = new THREE.Mesh(centerGeo, matCenter);
+            moleculeGroup.add(centerMesh);
+            
+            const bondLen = 2.8; 
+            
+            model.positions.forEach((posArr, index) => {
+                const vec = new THREE.Vector3(...posArr).normalize();
+                const target = vec.clone().multiplyScalar(bondLen);
+                
+                if (model.lp.includes(index)) {
+                    // Draw Lone Pair (Probability Lobe)
+                    const lpGeo = new THREE.SphereGeometry(0.6, 32, 32);
+                    // Stretch along Z
+                    lpGeo.scale(1, 1, 1.8);
+                    // Shift so base starts near the nucleus
+                    lpGeo.translate(0, 0, 1.0); 
+                    
+                    const lpMesh = new THREE.Mesh(lpGeo, matLP);
+                    lpMesh.lookAt(vec);
+                    moleculeGroup.add(lpMesh);
+                } else {
+                    // Draw Attached Atom
+                    const atomGeo = new THREE.SphereGeometry(0.55, 32, 32);
+                    const atomMesh = new THREE.Mesh(atomGeo, matAtom);
+                    atomMesh.position.copy(target);
+                    moleculeGroup.add(atomMesh);
+                    
+                    // Draw Bond
+                    const cylGeo = new THREE.CylinderGeometry(0.12, 0.12, bondLen, 16);
+                    // Default cylinder is along Y. Shift so bottom is at origin
+                    cylGeo.translate(0, bondLen / 2, 0);
+                    // Rotate to point along Z
+                    cylGeo.rotateX(Math.PI / 2);
+                    
+                    const bondMesh = new THREE.Mesh(cylGeo, matBond);
+                    bondMesh.lookAt(vec);
+                    moleculeGroup.add(bondMesh);
+                }
+            });
+        }
+
+        /* ═══════════════════════════════════════════
+           ANIMATION & RESIZE
+           ═══════════════════════════════════════════ */
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Smooth pop-in scale animation
+            moleculeGroup.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        });
+
+        // Initialize with default model
+        selectModel('AX4'); // Tetrahedral default
+
+        // Mobile Sidebar Toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        function toggleMenu() {
+            sidebar.classList.toggle('open');
+            if (sidebar.classList.contains('open')) {
+                overlay.style.display = 'block';
+                // Trigger reflow
+                void overlay.offsetWidth;
+                overlay.classList.add('active');
+            } else {
+                overlay.classList.remove('active');
+                setTimeout(() => overlay.style.display = 'none', 300);
+            }
+        }
+
+        menuToggle.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+
+        // Close sidebar on model select in mobile
+        const originalSelectModel = window.selectModel;
+        window.selectModel = function(id) {
+            originalSelectModel(id);
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                toggleMenu();
+            }
+        };
+
+        // Update controls tip for touch devices
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            const tip = document.querySelector('.controls-tip');
+            if(tip) {
+                tip.innerHTML = '<span>👆 Swipe to Rotate</span><span>·</span><span>🤏 Pinch to Zoom</span>';
+            }
+        }
+
+        // Feedback Modal Logic
+        const feedbackBtn = document.getElementById('feedback-btn');
+        const feedbackModal = document.getElementById('feedback-modal');
+        const closeModal = document.getElementById('close-modal');
+        const feedbackForm = document.getElementById('feedback-form');
+
+        feedbackBtn.addEventListener('click', () => {
+            feedbackModal.classList.add('active');
+        });
+        closeModal.addEventListener('click', () => {
+            feedbackModal.classList.remove('active');
+        });
+        feedbackModal.addEventListener('click', (e) => {
+            if (e.target === feedbackModal) feedbackModal.classList.remove('active');
+        });
+
+        const roleSelect = document.getElementById('fb-role');
+        const studentFields = document.getElementById('student-fields');
+
+        // Show/hide student fields based on role
+        if (roleSelect.value === 'Student') {
+            studentFields.style.display = 'block';
+        }
+        roleSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'Student') {
+                studentFields.style.display = 'block';
+            } else {
+                studentFields.style.display = 'none';
+            }
+        });
+
+        feedbackForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const role = document.getElementById('fb-role').value;
+            const org = document.getElementById('fb-org').value || 'None';
+            const impact = document.getElementById('fb-impact').value;
+            const text = document.getElementById('fb-text').value;
+
+            let bodyText = `Role: ${role}\nOrganization: ${org}\nLearning Impact: ${impact}\n`;
+            
+            if (role === 'Student') {
+                const scores = document.getElementById('fb-scores').value;
+                bodyText += `Score Improvement: ${scores}\n`;
+            }
+
+            bodyText += `\nFeedback:\n${text}`;
+
+            const subject = encodeURIComponent('VSEPR Simulator Feedback');
+            const body = encodeURIComponent(bodyText);
+            
+            window.location.href = `mailto:harshveerhky@gmail.com?subject=${subject}&body=${body}`;
+            feedbackModal.classList.remove('active');
+            feedbackForm.reset();
+        });
+
+    </script>
+
+    <script>
+        // Disable F12
+        document.addEventListener('keydown', function(e) {
+
+            // F12
+            if (e.key === 'F12') {
+                e.preventDefault();
+                return false;
+            }
+
+            // Ctrl + Shift + I
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i') {
+                e.preventDefault();
+                return false;
+            }
+
+            // Ctrl + Shift + J
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'j') {
+                e.preventDefault();
+                return false;
+            }
+
+            // Ctrl + U (View Source)
+            if (e.ctrlKey && e.key.toLowerCase() === 'u') {
+                e.preventDefault();
+                return false;
+            }
+
+            // Ctrl + Shift + C (Inspect Element)
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c') {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Disable right click
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+    </script>
+
+    <!-- Feedback Modal HTML -->
+    <div id="feedback-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-modal">&times;</span>
+            <h2>Feedback</h2>
+            <form id="feedback-form">
+                <label>I am a:</label>
+                <select id="fb-role">
+                    <option value="Student">Student</option>
+                    <option value="Teacher">Teacher</option>
+                    <option value="Other">Other</option>
+                </select>
+                
+                <label>Organization (optional):</label>
+                <input type="text" id="fb-org" placeholder="School, University, etc.">
+                
+                <label>How impactful was this tool for your learning?</label>
+                <select id="fb-impact">
+                    <option value="Extremely Impactful">Extremely Impactful</option>
+                    <option value="Very Impactful">Very Impactful</option>
+                    <option value="Moderately Impactful">Moderately Impactful</option>
+                    <option value="Slightly Impactful">Slightly Impactful</option>
+                    <option value="Not Impactful">Not Impactful</option>
+                </select>
+
+                <div id="student-fields" style="display: none;">
+                    <label>Did this tool help improve your test scores?</label>
+                    <select id="fb-scores">
+                        <option value="Too early to tell">Too early to tell</option>
+                        <option value="Yes, definitely">Yes, definitely</option>
+                        <option value="No, not really">No, not really</option>
+                    </select>
+                </div>
+                
+                <label>Feedback:</label>
+                <textarea id="fb-text" rows="4" required placeholder="What do you think?"></textarea>
+                
+                <button type="submit" class="submit-btn">Send via Email</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
